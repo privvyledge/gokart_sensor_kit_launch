@@ -1,16 +1,7 @@
-# Copyright 2023 Tier IV, Inc. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Todo:
+    * add
+"""
 
 import os
 
@@ -22,18 +13,11 @@ from launch.actions import SetLaunchConfiguration
 from launch.conditions import IfCondition
 from launch.conditions import UnlessCondition
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
 import yaml
-
-
-def get_lidar_make(sensor_name):
-    if sensor_name[:6].lower() == "pandar":
-        return "Hesai", ".csv"
-    elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
-        return "Velodyne", ".yaml"
-    return "unrecognized_sensor_model"
 
 
 def get_vehicle_info(context):
@@ -68,56 +52,12 @@ def launch_setup(context, *args, **kwargs):
             result[x] = LaunchConfiguration(x)
         return result
 
-    # Model and make
-    sensor_model = LaunchConfiguration("sensor_model").perform(context)
-    sensor_make, sensor_extension = get_lidar_make(sensor_model)
-    nebula_decoders_share_dir = get_package_share_directory("nebula_decoders")
-
-    # Calibration file
-    sensor_calib_fp = os.path.join(
-        nebula_decoders_share_dir,
-        "calibration",
-        sensor_make.lower(),
-        sensor_model + sensor_extension,
-    )
-    assert os.path.exists(
-        sensor_calib_fp
-    ), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
-
     nodes = []
 
-    nodes.append(
-        ComposableNode(
-            package="nebula_ros",
-            plugin=sensor_make + "DriverRosWrapper",
-            name=sensor_make.lower() + "_driver_ros_wrapper_node",
-            parameters=[
-                {
-                    "calibration_file": sensor_calib_fp,
-                    "sensor_model": sensor_model,
-                    **create_parameter_dict(
-                        "host_ip",
-                        "sensor_ip",
-                        "data_port",
-                        "return_mode",
-                        "min_range",
-                        "max_range",
-                        "frame_id",
-                        "scan_phase",
-                        "cloud_min_angle",
-                        "cloud_max_angle",
-                        "dual_return_distance_threshold",
-                    ),
-                },
-            ],
-            remappings=[
-                ("aw_points", "pointcloud_raw"),
-                ("aw_points_ex", "pointcloud_raw_ex"),
-            ],
-            extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
-        )
-    )
-
+    """
+    Add PointCloud preprocessors
+    """
+    # Box filter to remove the kart and other ego materials from the PointCloud
     cropbox_parameters = create_parameter_dict("input_frame", "output_frame")
     cropbox_parameters["negative"] = True
 
@@ -129,8 +69,7 @@ def launch_setup(context, *args, **kwargs):
     cropbox_parameters["min_z"] = vehicle_info["min_height_offset"]
     cropbox_parameters["max_z"] = vehicle_info["max_height_offset"]
 
-    nodes.append(
-        ComposableNode(
+    ego_box_crop_node = ComposableNode(
             package="pointcloud_preprocessor",
             plugin="pointcloud_preprocessor::CropBoxFilterComponent",
             name="crop_box_filter_self",
@@ -141,7 +80,6 @@ def launch_setup(context, *args, **kwargs):
             parameters=[cropbox_parameters],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
-    )
 
     mirror_info = get_vehicle_mirror_info(context)
     cropbox_parameters["min_x"] = mirror_info["min_longitudinal_offset"]
@@ -151,8 +89,7 @@ def launch_setup(context, *args, **kwargs):
     cropbox_parameters["min_z"] = mirror_info["min_height_offset"]
     cropbox_parameters["max_z"] = mirror_info["max_height_offset"]
 
-    nodes.append(
-        ComposableNode(
+    mirror_box_crop_node = ComposableNode(
             package="pointcloud_preprocessor",
             plugin="pointcloud_preprocessor::CropBoxFilterComponent",
             name="crop_box_filter_mirror",
@@ -163,10 +100,8 @@ def launch_setup(context, *args, **kwargs):
             parameters=[cropbox_parameters],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
-    )
 
-    nodes.append(
-        ComposableNode(
+    pointcloud_interpolator_node = ComposableNode(
             package="pointcloud_preprocessor",
             plugin="pointcloud_preprocessor::DistortionCorrectorComponent",
             name="distortion_corrector_node",
@@ -178,10 +113,8 @@ def launch_setup(context, *args, **kwargs):
             ],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
-    )
 
-    nodes.append(
-        ComposableNode(
+    ring_outlier_filter_node = ComposableNode(
             package="pointcloud_preprocessor",
             plugin="pointcloud_preprocessor::RingOutlierFilterComponent",
             name="ring_outlier_filter",
@@ -191,7 +124,12 @@ def launch_setup(context, *args, **kwargs):
             ],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
-    )
+
+    # todo: add more filters
+    nodes.append(ego_box_crop_node)
+    nodes.append(mirror_box_crop_node)  # todo: might remove
+    nodes.append(pointcloud_interpolator_node)  # todo: might remove
+    nodes.append(ring_outlier_filter_node)  # todo: might remove
 
     # set container to run all required components in the same process
     container = ComposableNodeContainer(
@@ -210,33 +148,59 @@ def launch_setup(context, *args, **kwargs):
         condition=IfCondition(LaunchConfiguration("use_pointcloud_container")),
     )
 
-    driver_component = ComposableNode(
-        package="nebula_ros",
-        plugin=sensor_make + "HwInterfaceRosWrapper",
+    # Start the LIDAR driver.
+    # Todo: test if Livox HAP Lidar can be run as a composable node.
+    # Todo: might need to put at the top
+    driver_node = ComposableNode(
+        package="livox_ros_driver2",
+        plugin="livox_ros::DriverNode",
         # node is created in a global context, need to avoid name clash
-        name=sensor_make.lower() + "_hw_interface_ros_wrapper_node",
+        name="livox_lidar_publisher",
         parameters=[
             {
-                "sensor_model": sensor_model,
-                "calibration_file": sensor_calib_fp,
                 **create_parameter_dict(
-                    "sensor_ip",
-                    "host_ip",
-                    "scan_phase",
-                    "return_mode",
-                    "frame_id",
-                    "rotation_speed",
-                    "data_port",
-                    "gnss_port",
-                    "cloud_min_angle",
-                    "cloud_max_angle",
-                    "packet_mtu_size",
-                    "dual_return_distance_threshold",
-                    "setup_sensor",
+                    "xfer_format",
+                     "multi_topic",
+                     "data_src",
+                     "publish_freq",
+                     "output_data_type",
+                     "frame_id",
+                     "lvx_file_path",
+                     "user_config_path",
+                     "cmdline_input_bd_code",
                 ),
             }
         ],
+        remappings=[
+            ("/livox/points", "pointcloud_raw_ex"),
+            # ("/livox/points_ex", "pointcloud_raw_ex"),
+        ],
+        # extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],  # todo: test this line
     )
+
+    # driver_node = Node(
+    #         package='livox_ros_driver2',
+    #         executable='livox_ros_driver2_node',
+    #         name='livox_lidar_publisher',
+    #         output='screen',
+    #         parameters=[
+    #             # livox_ros2_params,
+    #             # Override parameters
+    #             {
+    #              **create_parameter_dict(
+    #                      "xfer_format",
+    #                      "multi_topic",
+    #                      "data_src",
+    #                      "publish_freq",
+    #                      "output_data_type",
+    #                      "frame_id",
+    #                      "lvx_file_path",
+    #                      "user_config_path",
+    #                      "cmdline_input_bd_code",
+    #                 ),
+    #              }
+    #         ]
+    # )
 
     target_container = (
         container
@@ -245,15 +209,25 @@ def launch_setup(context, *args, **kwargs):
     )
 
     driver_component_loader = LoadComposableNodes(
-        composable_node_descriptions=[driver_component],
+        composable_node_descriptions=[driver_node],
         target_container=target_container,
         condition=IfCondition(LaunchConfiguration("launch_driver")),
     )
 
-    return [container, component_loader, driver_component_loader]
+    launch_data = [container, component_loader, driver_component_loader]
+    # launch_data.append(driver_node)
+    return launch_data
 
 
 def generate_launch_description():
+    cur_path = os.path.split(os.path.realpath(__file__))[0] + '/'
+    cur_config_path = cur_path + '../config'
+    lidar_config = os.path.join(cur_config_path, 'lidar_livox_hap_config.json')
+
+    package_directory = get_package_share_directory('common_sensor_launch')
+    # lidar_config = os.path.join(
+    #         package_directory, 'config', 'lidar_livox_hap_config.json'
+    # )
     launch_arguments = []
 
     def add_launch_arg(name: str, default_value=None, description=None):
@@ -262,24 +236,20 @@ def generate_launch_description():
             DeclareLaunchArgument(name, default_value=default_value, description=description)
         )
 
-    add_launch_arg("sensor_model", description="sensor model name")
-    add_launch_arg("config_file", "", description="sensor configuration file")
     add_launch_arg("launch_driver", "True", "do launch driver")
-    add_launch_arg("setup_sensor", "True", "configure sensor")
-    add_launch_arg("sensor_ip", "192.168.1.201", "device ip address")
-    add_launch_arg("host_ip", "255.255.255.255", "host ip address")
-    add_launch_arg("scan_phase", "0.0")
-    add_launch_arg("base_frame", "base_link", "base frame id")
-    add_launch_arg("min_range", "0.3", "minimum view range for Velodyne sensors")
-    add_launch_arg("max_range", "300.0", "maximum view range for Velodyne sensors")
-    add_launch_arg("cloud_min_angle", "0", "minimum view angle setting on device")
-    add_launch_arg("cloud_max_angle", "360", "maximum view angle setting on device")
-    add_launch_arg("data_port", "2368", "device data port number")
-    add_launch_arg("gnss_port", "2380", "device gnss port number")
-    add_launch_arg("packet_mtu_size", "1500", "packet mtu size")
-    add_launch_arg("rotation_speed", "600", "rotational frequency")
-    add_launch_arg("dual_return_distance_threshold", "0.1", "dual return distance threshold")
-    add_launch_arg("frame_id", "lidar", "frame id")
+    add_launch_arg("xfer_format", description="0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format, "
+                                              "2-PointCloud2(PointXYZI)")
+    add_launch_arg("multi_topic", "", description="0-All LiDARs share the same topic, 1-One LiDAR one topic")
+    add_launch_arg("data_src", "True", "configure sensor")
+    add_launch_arg("sensor_ip", "192.168.1.100", "device ip address. Please specify in JSON file")
+    add_launch_arg("host_ip", "192.168.1.50", "host ip address. Please specify in JSON file")
+    add_launch_arg("publish_freq", "50.0", description="freqency of publish, 5.0, 10.0, 20.0, 50.0, etc. Max 100.0 Hz")
+    add_launch_arg("output_data_type", "0")
+    add_launch_arg("frame_id", "lidar", description="LIDAR frame id")
+    add_launch_arg("base_frame", "base_link", description="base frame id")
+    add_launch_arg("lvx_file_path", "/home/livox/livox_test.lvx")
+    add_launch_arg("cmdline_input_bd_code", "livox0000000001")
+    add_launch_arg("user_config_path", lidar_config)
     add_launch_arg("input_frame", LaunchConfiguration("base_frame"), "use for cropbox")
     add_launch_arg("output_frame", LaunchConfiguration("base_frame"), "use for cropbox")
     add_launch_arg(
@@ -288,7 +258,7 @@ def generate_launch_description():
     add_launch_arg("use_multithread", "False", "use multithread")
     add_launch_arg("use_intra_process", "False", "use ROS 2 component container communication")
     add_launch_arg("use_pointcloud_container", "false")
-    add_launch_arg("container_name", "nebula_node_container")
+    add_launch_arg("container_name", "livox_node_container")
 
     set_container_executable = SetLaunchConfiguration(
         "container_executable",

@@ -1,3 +1,9 @@
+<!--
+Todo: move to "common_sensor_launch" and name it imu_corrector.launch.xml, then refactor and make this launch file spawn for multiple IMUs, i.e
+  LIVOX LIDAR IMU, 4x ZED 2i IMUs, and Yahboom IMU.
+
+  Also could add IMU filter before to get orientation data from IMU
+  -->
 <launch>
   <arg name="launch_driver" default="true"/>
 

@@ -1,3 +1,6 @@
+"""
+This launch file concatenates pointclouds from multiple LIDAR devices.
+"""
 # Copyright 2020 Tier IV, Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
