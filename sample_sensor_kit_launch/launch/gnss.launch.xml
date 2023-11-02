@@ -26,6 +26,19 @@ Todo: launch our driver instead
       <include file="$(find-pkg-share septentrio_gnss_driver)/launch/mosaic_x5_rover.launch.xml"/>
     </group>
 
+    <group >
+        <include file="$(find-pkg-share common_sensor_launch)/launch/nebula_node_container.launch.py">
+          <arg name="ros_params_override_path" value="$(var ros_params_override_path)"/>
+          <arg name="launch_driver" value="$(var launch_driver)"/>
+          <arg name="frame_id" value="$(var sensor_frame)"/>
+          <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
+          <arg name="use_intra_process" value="true"/>
+          <arg name="use_multithread" value="true"/>
+          <arg name="use_pointcloud_container" value="$(var use_pointcloud_container)"/>
+          <arg name="container_name" value="$(var container_name)"/>
+      </include>
+    </group>
+
     <!-- NavSatFix to MGRS Pose -->
     <include file="$(find-pkg-share gnss_poser)/launch/gnss_poser.launch.xml">
       <arg name="input_topic_fix" value="$(var navsatfix_topic_name)"/>

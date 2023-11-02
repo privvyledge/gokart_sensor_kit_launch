@@ -13,7 +13,7 @@
   <arg name="use_pointcloud_container" default="false"/>
   <arg name="container_name" default="livox_node_container"/>
 
-  <include file="$(find-pkg-share common_sensor_launch)/launch/nebula_node_container.launch.py">
+  <include file="$(find-pkg-share common_sensor_launch)/launch/livox_hap_node_container.launch.py">
     <arg name="launch_driver" value="$(var launch_driver)"/>
     <arg name="frame_id" value="$(var sensor_frame)"/>
     <arg name="base_frame" value="$(var base_frame)"/>

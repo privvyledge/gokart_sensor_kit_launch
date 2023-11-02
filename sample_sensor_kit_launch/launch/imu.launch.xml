@@ -1,8 +1,9 @@
 <!--
-Todo: move to "common_sensor_launch" and name it imu_corrector.launch.xml, then refactor and make this launch file spawn for multiple IMUs, i.e
+Todo:
+  * move to "common_sensor_launch" and name it imu_corrector.launch.xml, then refactor and make this launch file spawn for multiple IMUs, i.e
   LIVOX LIDAR IMU, 4x ZED 2i IMUs, and Yahboom IMU.
-
-  Also could add IMU filter before to get orientation data from IMU
+  * Also could add IMU filter before to get orientation data from IMU
+  * Launch imu_tools as a component (imu_filter_madgwick only)
   -->
 <launch>
   <arg name="launch_driver" default="true"/>
@@ -11,15 +12,16 @@ Todo: move to "common_sensor_launch" and name it imu_corrector.launch.xml, then 
     <push-ros-namespace namespace="imu"/>
 
     <group>
-      <push-ros-namespace namespace="tamagawa"/>
-      <node pkg="tamagawa_imu_driver" name="tag_serial_driver" exec="tag_serial_driver" if="$(var launch_driver)">
-        <remap from="imu/data_raw" to="imu_raw"/>
-        <param name="port" value="/dev/imu"/>
-        <param name="imu_frame_id" value="tamagawa/imu_link"/>
+      <push-ros-namespace namespace="yahboom"/>
+      <node pkg="wit_ros2_imu" name="yahboom_imu_driver" exec="wit_ros2_imu" if="$(var launch_driver)">
+        <remap from="/wit/imu" to="imu_raw"/>  <!-- from="imu/data_raw" to="imu_raw" -->
+        <param name="port" value="/dev/imu_usb"/>
+        <param name="imu_frame_id" value="imu_link"/>
+        <param name="baud" value="9600" />
       </node>
     </group>
 
-    <arg name="imu_raw_name" default="tamagawa/imu_raw"/>
+    <arg name="imu_raw_name" default="yahboom/imu_raw"/>
     <arg name="imu_corrector_param_file" default="$(find-pkg-share individual_params)/config/$(var vehicle_id)/sample_sensor_kit/imu_corrector.param.yaml"/>
     <include file="$(find-pkg-share imu_corrector)/launch/imu_corrector.launch.xml">
       <arg name="input_topic" value="$(var imu_raw_name)"/>

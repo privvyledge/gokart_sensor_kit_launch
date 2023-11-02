@@ -8,7 +8,7 @@
   <arg name="use_pointcloud_container" default="false"/>
   <arg name="container_name" default="velodyne_node_container"/>
 
-  <include file="$(find-pkg-share common_sensor_launch)/launch/nebula_node_container.launch.py">
+  <include file="$(find-pkg-share common_sensor_launch)/launch/zed2i_node_container.launch.py">
     <arg name="ros_params_override_path" value="$(var ros_params_override_path)"/>
     <arg name="launch_driver" value="$(var launch_driver)"/>
     <arg name="frame_id" value="$(var sensor_frame)"/>
