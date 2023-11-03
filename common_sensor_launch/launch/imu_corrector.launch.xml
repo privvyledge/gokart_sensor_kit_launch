@@ -1,0 +1,6 @@
+<!--
+This node does the following:
+1. (optional) filter the IMU data using Madgwick filter
+2. Correct IMU bias
+3. Estimate gyro heading
+-->

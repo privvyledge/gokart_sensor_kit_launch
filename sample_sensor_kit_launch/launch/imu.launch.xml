@@ -7,6 +7,9 @@ Todo:
   -->
 <launch>
   <arg name="launch_driver" default="true"/>
+  <arg name="port" default="/dev/imu_usb"/>
+  <arg name="imu_frame_id" default="imu_link"/>
+  <arg name="baudrate" default="9600"/>
 
   <group>
     <push-ros-namespace namespace="imu"/>
@@ -14,13 +17,14 @@ Todo:
     <group>
       <push-ros-namespace namespace="yahboom"/>
       <node pkg="wit_ros2_imu" name="yahboom_imu_driver" exec="wit_ros2_imu" if="$(var launch_driver)">
-        <remap from="/wit/imu" to="imu_raw"/>  <!-- from="imu/data_raw" to="imu_raw" -->
-        <param name="port" value="/dev/imu_usb"/>
-        <param name="imu_frame_id" value="imu_link"/>
-        <param name="baud" value="9600" />
+        <remap from="imu/data_raw" to="imu_raw"/>
+        <param name="port" value="$(var port)"/>
+        <param name="imu_frame_id" value="$(var imu_frame_id)"/>
+        <param name="baud" value="$(var baudrate)" />
       </node>
     </group>
 
+    <arg name="vehicle_id" default="default"/>
     <arg name="imu_raw_name" default="yahboom/imu_raw"/>
     <arg name="imu_corrector_param_file" default="$(find-pkg-share individual_params)/config/$(var vehicle_id)/sample_sensor_kit/imu_corrector.param.yaml"/>
     <include file="$(find-pkg-share imu_corrector)/launch/imu_corrector.launch.xml">

@@ -76,21 +76,11 @@ def launch_setup(context, *args, **kwargs):
             result[x] = LaunchConfiguration(x)
         return result
 
+    """
+    Zed configuration setup
+    """
     wrapper_dir = get_package_share_directory('zed_wrapper')
 
-    """
-    Zed Parameters
-    
-    # Model and make
-    camera_name = LaunchConfiguration("camera_name").perform(context)
-    camera_model = LaunchConfiguration("camera_model").perform(context)
-
-    ros_params_override_path = os.path.join(
-            get_package_share_directory('common_sensor_launch'),
-            'config',
-            'camera_' + camera_model + '.yaml')
-    )
-    """
     # Launch configuration variables
     svo_path = LaunchConfiguration('svo_path')
 
@@ -115,6 +105,8 @@ def launch_setup(context, *args, **kwargs):
 
     ros_params_override_path = LaunchConfiguration('ros_params_override_path')
 
+    gnss_fusion_enabled = LaunchConfiguration('gnss_fusion_enabled')
+    gnss_fix_topic = LaunchConfiguration('gnss_fix_topic')
     gnss_frame = LaunchConfiguration('gnss_frame')
 
     camera_name_val = camera_name.perform(context)
@@ -151,7 +143,7 @@ def launch_setup(context, *args, **kwargs):
             plugin="pointcloud_preprocessor::CropBoxFilterComponent",
             name="crop_box_filter_self",
             remappings=[
-                ("input", "pointcloud_raw_ex"),
+                ("input", camera_name_val+"/point_cloud/cloud_registered"),
                 ("output", "self_cropped/pointcloud_ex"),
             ],
             parameters=[cropbox_parameters],
@@ -206,7 +198,7 @@ def launch_setup(context, *args, **kwargs):
     nodes.append(ego_box_crop_node)
     nodes.append(mirror_box_crop_node)  # todo: might remove
     nodes.append(pointcloud_interpolator_node)  # todo: might remove
-    nodes.append(ring_outlier_filter_node)  # todo: might remove
+    # nodes.append(ring_outlier_filter_node)  # todo: remove
 
     # set container to run all required components in the same process
     container = ComposableNodeContainer(
@@ -253,13 +245,11 @@ def launch_setup(context, *args, **kwargs):
             }]
     )
 
-    # Todo: test running Zed as a composable node
     driver_component = ComposableNode(
-        package="zed_wrapper",
+        package="zed_components",
         plugin="stereolabs::ZedCamera",
         # node is created in a global context, need to avoid name clash
         name=camera_name_val,
-        output='screen',
         parameters=[
                 # YAML files
                 config_common_path,  # Common parameters
@@ -275,10 +265,18 @@ def launch_setup(context, *args, **kwargs):
                     'general.serial_number': serial_number,
                     'pos_tracking.publish_tf': publish_tf,
                     'pos_tracking.publish_map_tf': publish_map_tf,
-                    'sensors.publish_imu_tf': publish_imu_tf
+                    'sensors.publish_imu_tf': publish_imu_tf,
+                    'gnss_fusion.gnss_fusion_enabled': gnss_fusion_enabled,
+                    'gnss_fusion.gnss_fix_topic': gnss_fix_topic,
+                    'gnss_fusion.gnss_frame': gnss_frame,
                 },
                 ros_params_override_path,
             ],
+
+        # remappings=[
+        #     (camera_name_val+"/point_cloud/cloud_registered", "pointcloud_raw_ex"),
+        #     # ("/livox/points_ex", "pointcloud_raw_ex"),
+        # ],
     )
 
     target_container = (
@@ -312,13 +310,13 @@ def generate_launch_description():
     # Zed launch arguments
     add_launch_arg("camera_name", default_value=TextSubstitution(text=""),
                    description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`. Leave empty to use the camera model as camera name.')
-    add_launch_arg("camera_model", description="The model of the camera. Using a wrong camera model can disable camera features. Valid models: `zed`, `zedm`, `zed2`, `zed2i`.")
+    add_launch_arg("camera_model", default_value="zed2i", description="The model of the camera. Using a wrong camera model can disable camera features. Valid models: `zed`, `zedm`, `zed2`, `zed2i`.")
     add_launch_arg('node_name', default_value='zed_node',
                 description='The name of the zed_wrapper node. All the topic will have the same prefix: `/<camera_name>/<node_name>/`')
     add_launch_arg("config_path", default_value=TextSubstitution(text=default_config_common), description="Path to the YAML configuration file for the camera.")
 
     add_launch_arg("base_frame", "base_link", "Name of the base link frame.")
-    add_launch_arg("frame_id", "zed_link", "frame id")  # change in config file
+    # add_launch_arg("frame_id", "zed_link", "frame id")  # change in config file
 
     add_launch_arg(
             'zed_id',
@@ -361,9 +359,19 @@ def generate_launch_description():
             default_value='base_link',
             description='Name of the base link frame.')
     add_launch_arg(
+            'gnss_fusion_enabled',
+            default_value='true',
+            description='Whether to fuse "sensor_msg/NavSatFix" message information into pose data')
+    add_launch_arg(
+            'gnss_fix_topic',
+            default_value='',
+            description='Name of the GNSS topic of type NavSatFix to subscribe [Default: "/gps/fix"]')
+
+    add_launch_arg(
             'gnss_frame',
             default_value='',
             description='Name of the GNSS link frame. Leave empty if not used. Remember to set the transform `base_link` -> `gnss_frame` in the URDF file.')
+
     add_launch_arg(
             'cam_pose',
             default_value='[0.0,0.0,0.0,0.0,0.0,0.0]',

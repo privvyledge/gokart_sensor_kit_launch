@@ -1,6 +1,6 @@
 """
 Todo:
-    * add
+    * pass configuration options as parameters
 """
 
 import os
@@ -18,6 +18,17 @@ from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
 import yaml
+
+
+# Livox ROS parameters
+xfer_format = 0  # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
+multi_topic = 0  # 0-All LiDARs share the same topic, 1-One LiDAR one topic
+data_src = 0  # 0-lidar, others-Invalid data src
+publish_freq = 50.0  # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+output_type = 0
+frame_id = 'livox_frame'
+lvx_file_path = '/home/livox/livox_test.lvx'
+cmdline_bd_code = 'livox0000000001'
 
 
 def get_vehicle_info(context):
@@ -52,11 +63,37 @@ def launch_setup(context, *args, **kwargs):
             result[x] = LaunchConfiguration(x)
         return result
 
-    nodes = []
+    """
+    LIVOX HAP configuration setup
+    """
+    package_directory = get_package_share_directory('common_sensor_launch')
+    lidar_config = os.path.join(
+            package_directory, 'config', 'lidar_livox_hap_config.json'
+    )
+    # publish_freq_la = DeclareLaunchArgument('publish_freq_la',
+    #                                         default_value=str(publish_freq),
+    #                                         description='LIDAR publish frequency. 5.0, 10.0, 20.0, 50.0, etc. Max 100.')
+    #
+    # lidar_frame_id_la = DeclareLaunchArgument('lidar_publish_frame_id',
+    #                                           default_value=frame_id,
+    #                                           description='Frame ID to publish pointclouds and IMU.')
+
+    livox_ros2_params = [
+        {"xfer_format": xfer_format},
+        {"multi_topic": multi_topic},
+        {"data_src": data_src},
+        {"publish_freq": publish_freq},
+        {"output_data_type": output_type},
+        {"frame_id": frame_id},
+        {"lvx_file_path": lvx_file_path},
+        {"user_config_path": lidar_config},
+        {"cmdline_input_bd_code": cmdline_bd_code}
+    ]
 
     """
     Add PointCloud preprocessors
     """
+    nodes = []
     # Box filter to remove the kart and other ego materials from the PointCloud
     cropbox_parameters = create_parameter_dict("input_frame", "output_frame")
     cropbox_parameters["negative"] = True
@@ -74,7 +111,7 @@ def launch_setup(context, *args, **kwargs):
             plugin="pointcloud_preprocessor::CropBoxFilterComponent",
             name="crop_box_filter_self",
             remappings=[
-                ("input", "pointcloud_raw_ex"),
+                ("input", "/livox/lidar"),
                 ("output", "self_cropped/pointcloud_ex"),
             ],
             parameters=[cropbox_parameters],
@@ -129,7 +166,7 @@ def launch_setup(context, *args, **kwargs):
     nodes.append(ego_box_crop_node)
     nodes.append(mirror_box_crop_node)  # todo: might remove
     nodes.append(pointcloud_interpolator_node)  # todo: might remove
-    nodes.append(ring_outlier_filter_node)  # todo: might remove
+    # nodes.append(ring_outlier_filter_node)  # todo: remove
 
     # set container to run all required components in the same process
     container = ComposableNodeContainer(
@@ -149,58 +186,33 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Start the LIDAR driver.
-    # Todo: test if Livox HAP Lidar can be run as a composable node.
-    # Todo: might need to put at the top
-    driver_node = ComposableNode(
+    driver_component = ComposableNode(
         package="livox_ros_driver2",
         plugin="livox_ros::DriverNode",
         # node is created in a global context, need to avoid name clash
         name="livox_lidar_publisher",
-        parameters=[
-            {
-                **create_parameter_dict(
-                    "xfer_format",
-                     "multi_topic",
-                     "data_src",
-                     "publish_freq",
-                     "output_data_type",
-                     "frame_id",
-                     "lvx_file_path",
-                     "user_config_path",
-                     "cmdline_input_bd_code",
-                ),
-            }
-        ],
-        remappings=[
-            ("/livox/points", "pointcloud_raw_ex"),
-            # ("/livox/points_ex", "pointcloud_raw_ex"),
-        ],
+        # parameters=[
+        #     {
+        #         **create_parameter_dict(
+        #             "xfer_format",
+        #              "multi_topic",
+        #              "data_src",
+        #              "publish_freq",
+        #              "output_data_type",
+        #              "frame_id",
+        #              "lvx_file_path",
+        #              "user_config_path",
+        #              "cmdline_input_bd_code",
+        #         ),
+        #     }
+        # ],
+        parameters=livox_ros2_params,
+        # remappings=[
+        #     ("/livox/lidar", "pointcloud_raw_ex"),
+        #     # ("/livox/points_ex", "pointcloud_raw_ex"),
+        # ],
         # extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],  # todo: test this line
     )
-
-    # driver_node = Node(
-    #         package='livox_ros_driver2',
-    #         executable='livox_ros_driver2_node',
-    #         name='livox_lidar_publisher',
-    #         output='screen',
-    #         parameters=[
-    #             # livox_ros2_params,
-    #             # Override parameters
-    #             {
-    #              **create_parameter_dict(
-    #                      "xfer_format",
-    #                      "multi_topic",
-    #                      "data_src",
-    #                      "publish_freq",
-    #                      "output_data_type",
-    #                      "frame_id",
-    #                      "lvx_file_path",
-    #                      "user_config_path",
-    #                      "cmdline_input_bd_code",
-    #                 ),
-    #              }
-    #         ]
-    # )
 
     target_container = (
         container
@@ -209,13 +221,12 @@ def launch_setup(context, *args, **kwargs):
     )
 
     driver_component_loader = LoadComposableNodes(
-        composable_node_descriptions=[driver_node],
+        composable_node_descriptions=[driver_component],
         target_container=target_container,
         condition=IfCondition(LaunchConfiguration("launch_driver")),
     )
 
     launch_data = [container, component_loader, driver_component_loader]
-    # launch_data.append(driver_node)
     return launch_data
 
 
@@ -237,7 +248,7 @@ def generate_launch_description():
         )
 
     add_launch_arg("launch_driver", "True", "do launch driver")
-    add_launch_arg("xfer_format", description="0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format, "
+    add_launch_arg("xfer_format", default_value="0", description="0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format, "
                                               "2-PointCloud2(PointXYZI)")
     add_launch_arg("multi_topic", "", description="0-All LiDARs share the same topic, 1-One LiDAR one topic")
     add_launch_arg("data_src", "True", "configure sensor")

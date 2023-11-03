@@ -129,8 +129,8 @@ def launch_setup(context, *args, **kwargs):
 
         zed_wrapper_launch = IncludeLaunchDescription(
                 launch_description_source=PythonLaunchDescriptionSource([
-                    get_package_share_directory('sensor_kit_launch'),
-                    '/launch/' + model + '.launch.py'
+                    get_package_share_directory('common_sensor_launch'),
+                    '/launch/tests/' + model + '.launch.py'
                 ]),
                 launch_arguments={
                     'camera_name': name,

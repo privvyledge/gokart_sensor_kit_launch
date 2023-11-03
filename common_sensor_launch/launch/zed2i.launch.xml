@@ -1,17 +1,62 @@
-<!-- Todo: put relevant zed parameters here -->
 <launch>
+  <!-- For testing purposes only. This block should be commented out -->
+
+<!--  <arg name="vehicle_model" default="sample_vehicle" description="vehicle model name"/>-->
+<!--  <arg name="vehicle_id" default="default" description="vehicle id"/>-->
+<!--  <arg name="vehicle_mirror_param_file" default="$(find-pkg-share $(var vehicle_model)_description)/config/mirror.param.yaml"/>-->
+<!--  <arg name="sensor_model" default="sample_sensor_kit" description="sensor model name"/>-->
+<!--  <arg name="model" default="$(find-pkg-share tier4_vehicle_launch)/urdf/vehicle.xacro"/>-->
+<!--  <arg name="launch_vehicle_interface" default="true" description="launch vehicle interface"/>-->
+<!--  <let name="vehicle_model_pkg" value="$(find-pkg-share $(var vehicle_model)_description)"/>-->
+<!--  <arg name="config_dir" default="$(find-pkg-share individual_params)/config/$(var vehicle_id)/$(var sensor_model)"/>-->
+
+<!--  &lt;!&ndash; Global parameters &ndash;&gt;-->
+<!--  <group scoped="false">-->
+<!--    <include file="$(find-pkg-share global_parameter_loader)/launch/global_params.launch.py">-->
+<!--      <arg name="use_sim_time" value="false"/>-->
+<!--      <arg name="vehicle_model" value="$(var vehicle_model)"/>-->
+<!--    </include>-->
+<!--  </group>-->
+
+<!--  <include file="$(find-pkg-share tier4_vehicle_launch)/launch/vehicle.launch.xml">-->
+<!--    <arg name="vehicle_model" value="$(var vehicle_model)"/>-->
+<!--    <arg name="sensor_model" value="$(var sensor_model)"/>-->
+<!--    <arg name="launch_vehicle_interface" value="$(var launch_vehicle_interface)"/>-->
+<!--  </include>-->
+
+<!--  <node name="robot_state_publisher" pkg="robot_state_publisher" exec="robot_state_publisher">-->
+<!--    <param name="robot_description" value="$(command 'xacro $(var model) vehicle_model:=$(var vehicle_model) sensor_model:=$(var sensor_model)')"/>-->
+<!--  </node>-->
+
+  <!--   End testing block -->
+
+
   <!-- Params -->
+  <arg name="camera_name" default="zed2i"/>
+  <arg name="camera_model" default="zed2i"/>
+  <arg name="camera_pose" default="[0.0,0.0,0.0,0.0,0.0,0.0]"/>
+  <arg name="gnss_fusion_enabled" default="true"/>
+  <arg name="gnss_fix_topic" default="/gnss/yahboom/nav_sat_fix"/>
+  <arg name="gnss_frame" default="gnss_link"/>
+  <arg name="publish_urdf" default="true"/>
   <arg name="ros_params_override_path" default="$(find-pkg-share common_sensor_launch)/config/camera_zed2i.yaml" />
   <arg name="launch_driver" default="true"/>
-  <arg name="sensor_frame" default="velodyne"/>
-  <arg name="vehicle_mirror_param_file"/>
+<!--  <arg name="sensor_frame" default="velodyne"/>-->
   <arg name="use_pointcloud_container" default="false"/>
-  <arg name="container_name" default="velodyne_node_container"/>
+  <arg name="container_name" default="zed2i_node_container"/>
+  <arg name="vehicle_mirror_param_file" />
 
   <include file="$(find-pkg-share common_sensor_launch)/launch/zed2i_node_container.launch.py">
+    <arg name="camera_name" value="$(var camera_name)"/>
+    <arg name="camera_model" value="$(var camera_model)"/>
+    <arg name="camera_pose" value="$(var camera_pose)"/>
+    <arg name="gnss_fusion_enabled" value="$(var gnss_fusion_enabled)"/>
+    <arg name="gnss_fix_topic" value="$(var gnss_fix_topic)"/>
+    <arg name="gnss_frame" value="$(var gnss_frame)"/>
+    <arg name="publish_urdf" value="$(var publish_urdf)"/>
     <arg name="ros_params_override_path" value="$(var ros_params_override_path)"/>
     <arg name="launch_driver" value="$(var launch_driver)"/>
-    <arg name="frame_id" value="$(var sensor_frame)"/>
+<!--    <arg name="frame_id" value="$(var sensor_frame)"/>-->
     <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
     <arg name="use_intra_process" value="true"/>
     <arg name="use_multithread" value="true"/>

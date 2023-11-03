@@ -25,12 +25,12 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    # Camera model (force value)
+    # Camera model (force value). Todo: load as launch arguments or use the config file instead
     camera_name = 'front'
     camera_model = 'zed2i'
 
     ros_params_override_path = os.path.join(
-        get_package_share_directory('sensor_kit_launch'),
+        get_package_share_directory('common_sensor_launch'),
         'config',
         'camera_' + camera_model + '.yaml'
     )
