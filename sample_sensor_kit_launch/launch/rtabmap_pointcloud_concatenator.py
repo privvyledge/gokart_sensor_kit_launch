@@ -1,0 +1,1 @@
+# See http://wiki.ros.org/rtabmap_util#rtabmap_util.2Fpoint_cloud_aggregator

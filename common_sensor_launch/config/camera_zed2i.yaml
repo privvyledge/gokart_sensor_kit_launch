@@ -21,17 +21,18 @@
             min_depth: 0.2 # Min: 0.2, Max: 3.0
             max_depth: 40.0 # (10.0). Max: 40.0
 
-        pos_tracking:
-            publish_tf: false # (true). [usually overwritten by launch file] publish `odom -> base_link` TF
-            publish_map_tf: false # (true). [usually overwritten by launch file] publish `map -> odom` TF
-#            two_d_mode: false # Force navigation on a plane. If true the Z value will be fixed to "fixed_z_value", roll and pitch to zero
-#            fixed_z_value: 0.00 # Value to be used for Z coordinate if `two_d_mode` is true
+#        pos_tracking:
+#            publish_tf: false # (true). [usually overwritten by launch file] publish `odom -> base_link` TF
+#            publish_map_tf: false # (true). [usually overwritten by launch file] publish `map -> odom` TF
+##            two_d_mode: false # Force navigation on a plane. If true the Z value will be fixed to "fixed_z_value", roll and pitch to zero
+##            fixed_z_value: 0.00 # Value to be used for Z coordinate if `two_d_mode` is true
 
 
         mapping:
-            max_mapping_range: 10.0 # (5.0). maximum depth range while mapping in meters (-1 for automatic calculation) [2.0, 20.0]
+            resolution: 0.05 # maps resolution in meters [min: 0.01f - max: 0.2f]
+            max_mapping_range: 20.0 # (5.0). maximum depth range while mapping in meters (-1 for automatic calculation) [2.0, 20.0]
             fused_pointcloud_freq: 1.0 # frequency of the publishing of the fused colored point cloud
 
         sensors:
-            sensors_image_sync: true # (false). Synchronize Sensors messages with latest published video/depth message
-            sensors_pub_rate: 200. # (200) frequency of publishing of sensors data. MAX: 400. - MIN: grab rate
+            sensors_image_sync: false # (false). Synchronize Sensors messages with latest published video/depth message
+            sensors_pub_rate: 400. # (200) frequency of publishing of sensors data. MAX: 400. - MIN: grab rate

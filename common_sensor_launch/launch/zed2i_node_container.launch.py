@@ -105,9 +105,11 @@ def launch_setup(context, *args, **kwargs):
 
     ros_params_override_path = LaunchConfiguration('ros_params_override_path')
 
+    imu_fusion = LaunchConfiguration('imu_fusion')
     gnss_fusion_enabled = LaunchConfiguration('gnss_fusion_enabled')
     gnss_fix_topic = LaunchConfiguration('gnss_fix_topic')
     gnss_frame = LaunchConfiguration('gnss_frame')
+    mapping_enabled = LaunchConfiguration('mapping_enabled')
 
     camera_name_val = camera_name.perform(context)
     camera_model_val = camera_model.perform(context)
@@ -266,9 +268,11 @@ def launch_setup(context, *args, **kwargs):
                     'pos_tracking.publish_tf': publish_tf,
                     'pos_tracking.publish_map_tf': publish_map_tf,
                     'sensors.publish_imu_tf': publish_imu_tf,
+                    'pos_tracking.imu_fusion': imu_fusion,
                     'gnss_fusion.gnss_fusion_enabled': gnss_fusion_enabled,
                     'gnss_fusion.gnss_fix_topic': gnss_fix_topic,
                     'gnss_fusion.gnss_frame': gnss_frame,
+                    'mapping.mapping_enabled': mapping_enabled,
                 },
                 ros_params_override_path,
             ],
@@ -360,7 +364,7 @@ def generate_launch_description():
             description='Name of the base link frame.')
     add_launch_arg(
             'gnss_fusion_enabled',
-            default_value='true',
+            default_value='false',
             description='Whether to fuse "sensor_msg/NavSatFix" message information into pose data')
     add_launch_arg(
             'gnss_fix_topic',
@@ -373,8 +377,13 @@ def generate_launch_description():
             description='Name of the GNSS link frame. Leave empty if not used. Remember to set the transform `base_link` -> `gnss_frame` in the URDF file.')
 
     add_launch_arg(
+            'mapping_enabled',
+            default_value='false',
+            description='True to enable mapping and fused point cloud pubblication')
+
+    add_launch_arg(
             'cam_pose',
-            default_value='[0.0,0.0,0.0,0.0,0.0,0.0]',
+            default_value='[0.0,0.0,0.0,0.0,0.0,0.0]',  # [X, Y, Z, R, P, Y]
             description='Pose of the camera with respect to the base frame (i.e. `base_link`): [x,y,z,r,p,y]. Note: Orientation in rad.)')
 
     # Autoware launch arguments

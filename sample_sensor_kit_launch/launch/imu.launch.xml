@@ -9,10 +9,15 @@ Todo:
   <arg name="launch_driver" default="true"/>
   <arg name="port" default="/dev/imu_usb"/>
   <arg name="imu_frame_id" default="imu_link"/>
-  <arg name="baudrate" default="9600"/>
+  <arg name="baudrate" default="921600"/>
+  <arg name="filter_imu" default="false"/>
 
   <group>
     <push-ros-namespace namespace="imu"/>
+
+    <!-- Switch topic name -->
+<!--    <let name="imu_topic_name" value="~/imu/data" if="$(var filter_imu)"/>-->
+<!--    <let name="imu_topic_name" value="~/imu/data" if="$(eval &quot;'$(var gnss_receiver)'=='ublox'&quot;)"/>-->
 
     <group>
       <push-ros-namespace namespace="yahboom"/>
