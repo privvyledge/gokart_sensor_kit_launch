@@ -1,3 +1,4 @@
+<!-- Launch a ZED camera and PointCloud preprocessors as components. Todo: rename this file -->
 <launch>
   <!-- For testing purposes only. This block should be commented out -->
 
@@ -57,10 +58,10 @@
     <arg name="camera_model" value="$(var camera_model)"/>
     <arg name="cam_pose" value="$(var cam_pose)"/>
     <arg name="base_frame" value="$(var base_frame)"/>
-    <arg name="publish_tf" default="$(var publish_tf)"/>
-    <arg name="publish_map_tf" default="$(var publish_map_tf)"/>
-    <arg name="publish_imu_tf" default="$(var publish_imu_tf)"/>
-    <arg name="imu_fusion" default="$(var imu_fusion)"/>
+    <arg name="publish_tf" value="$(var publish_tf)"/>
+    <arg name="publish_map_tf" value="$(var publish_map_tf)"/>
+    <arg name="publish_imu_tf" value="$(var publish_imu_tf)"/>
+    <arg name="imu_fusion" value="$(var imu_fusion)"/>
     <arg name="gnss_fusion_enabled" value="$(var gnss_fusion_enabled)"/>
     <arg name="gnss_fix_topic" value="$(var gnss_fix_topic)"/>
     <arg name="gnss_frame" value="$(var gnss_frame)"/>

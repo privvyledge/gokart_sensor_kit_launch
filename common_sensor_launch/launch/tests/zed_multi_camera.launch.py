@@ -138,6 +138,7 @@ def launch_setup(context, *args, **kwargs):
                 ]),
                 launch_arguments={
                     'camera_name': name,
+                    'camera_model': model,
                     'serial_number': serial,
                     'cam_pose': pose,
                     'publish_tf': publish_tf,

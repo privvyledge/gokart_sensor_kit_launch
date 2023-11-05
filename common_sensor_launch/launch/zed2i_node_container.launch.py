@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
 See https://github.com/stereolabs/zed-ros2-wrapper/issues/126
+
+Todo:
+    * add extra parameters from launch/tests/zed_camera.launch.py
+    * rename this file to extend to other zed models
 """
 
 import os

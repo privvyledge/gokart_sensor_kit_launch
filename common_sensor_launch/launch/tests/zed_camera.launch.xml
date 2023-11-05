@@ -1,8 +1,9 @@
+<!-- Launch a ZED camera as a node -->
 <launch>
-  <!-- Params -->
+  <!-- Launch Arguments -->
   <arg name="camera_name" default="zed2i"/>
   <arg name="camera_model" default="zed2i"/>
-  <arg name="serial_number" default=""/>
+  <arg name="serial_number" default="0"/>
   <arg name="cam_pose" default="[0.0,0.0,0.0,0.0,0.0,0.0]"/>
   <arg name="base_frame" default="base_link"/>
   <arg name="publish_tf" default="false"/>
@@ -16,16 +17,16 @@
   <arg name="publish_urdf" default="false"/>
   <arg name="ros_params_override_path" default="$(find-pkg-share common_sensor_launch)/config/camera_zed2i.yaml" />
 
-  <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
+  <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.py">
     <arg name="camera_name" value="$(var camera_name)"/>
     <arg name="camera_model" value="$(var camera_model)"/>
     <arg name="serial_number" value="$(var serial_number)"/>
     <arg name="cam_pose" value="$(var cam_pose)"/>
     <arg name="base_frame" value="$(var base_frame)"/>
-    <arg name="publish_tf" default="$(var publish_tf)"/>
-    <arg name="publish_map_tf" default="$(var publish_map_tf)"/>
-    <arg name="publish_imu_tf" default="$(var publish_imu_tf)"/>
-    <arg name="imu_fusion" default="$(var imu_fusion)"/>
+    <arg name="publish_tf" value="$(var publish_tf)"/>
+    <arg name="publish_map_tf" value="$(var publish_map_tf)"/>
+    <arg name="publish_imu_tf" value="$(var publish_imu_tf)"/>
+    <arg name="imu_fusion" value="$(var imu_fusion)"/>
     <arg name="gnss_fusion_enabled" value="$(var gnss_fusion_enabled)"/>
     <arg name="gnss_fix_topic" value="$(var gnss_fix_topic)"/>
     <arg name="gnss_frame" value="$(var gnss_frame)"/>

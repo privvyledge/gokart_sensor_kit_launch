@@ -32,7 +32,7 @@
 
   <!-- Params -->
   <arg name="launch_driver" default="true"/>
-  <arg name="sensor_frame" default="velodyne"/>
+  <arg name="sensor_frame" default="livox_frame"/>
   <arg name="base_frame" default="base_link"/>
   <arg name="sensor_ip" default="192.168.1.100"/>
   <arg name="host_ip" default="192.168.1.50"/>

@@ -230,6 +230,10 @@ def generate_launch_description():
                 default_value='base_link',
                 description='Name of the base link frame.'),
             DeclareLaunchArgument(
+                    'imu_fusion',
+                    default_value='true',
+                    description='enable/disable IMU fusion. When set to false, only the optical odometry will be used'),
+            DeclareLaunchArgument(
                     'gnss_fusion_enabled',
                     default_value='false',
                     description='Whether to fuse "sensor_msg/NavSatFix" message information into pose data'),
