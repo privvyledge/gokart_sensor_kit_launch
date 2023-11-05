@@ -2,6 +2,9 @@
 """
 See https://github.com/stereolabs/zed-ros2-wrapper/issues/126
 
+Tips:
+    * To add IMU filtering as a component. See https://github.com/CCNYRoboticsLab/imu_tools/blob/humble/imu_filter_madgwick/launch/imu_filter_component.launch.py
+
 Todo:
     * add extra parameters from launch/tests/zed_camera.launch.py
     * rename this file to extend to other zed models

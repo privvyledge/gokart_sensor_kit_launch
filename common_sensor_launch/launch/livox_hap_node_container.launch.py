@@ -1,4 +1,7 @@
 """
+Tips:
+    * To add IMU filtering as a component. See https://github.com/CCNYRoboticsLab/imu_tools/blob/humble/imu_filter_madgwick/launch/imu_filter_component.launch.py
+
 Todo:
     * pass configuration options as parameters
 """

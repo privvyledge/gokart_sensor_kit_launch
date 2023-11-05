@@ -1,3 +1,4 @@
+<!-- Todo: setup IMU for cameras/lidar with launch_driver:=false -->
 <launch>
   <arg name="autoware_launch" default="false" description="Whether to launch nodes for use with Autoware or not."/>
   <arg name="launch_driver" default="true" description="do launch driver"/>
@@ -30,11 +31,13 @@
 
     <!-- IMU Driver -->
     <include file="$(find-pkg-share sample_sensor_kit_launch)/launch/imu.launch.xml">
+      <arg name="autoware_launch" value="$(var autoware_launch)"/>
       <arg name="launch_driver" value="$(var launch_driver)"/>
     </include>
 
     <!-- GNSS Driver -->
     <include file="$(find-pkg-share sample_sensor_kit_launch)/launch/gnss.launch.xml">
+      <arg name="autoware_launch" value="$(var autoware_launch)"/>
       <arg name="launch_driver" value="$(var launch_driver)"/>
     </include>
 

@@ -33,7 +33,7 @@
 
     <group>
       <push-ros-namespace namespace="front"/>
-      <include file="$(find-pkg-share common_sensor_launch)/launch/zed_camera.launch.xml">
+      <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
         <arg name="camera_name" value="zed_front"/>
         <arg name="camera_model" value="zed2i"/>
         <arg name="serial_number" value="31955492"/>
@@ -43,7 +43,7 @@
 
     <group>
       <push-ros-namespace namespace="left"/>
-      <include file="$(find-pkg-share common_sensor_launch)/launch/zed_camera.launch.xml">
+      <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
         <arg name="camera_name" value="zed_left"/>
         <arg name="camera_model" value="zed2i"/>
         <arg name="serial_number" value="32890871"/>
@@ -53,7 +53,7 @@
 
     <group>
       <push-ros-namespace namespace="right"/>
-      <include file="$(find-pkg-share common_sensor_launch)/launch/zed_camera.launch.xml">
+      <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
         <arg name="camera_name" value="zed_right"/>
         <arg name="camera_model" value="zed2i"/>
         <arg name="serial_number" value="34748473"/>
@@ -63,7 +63,7 @@
 
     <group>
       <push-ros-namespace namespace="rear"/>
-      <include file="$(find-pkg-share common_sensor_launch)/launch/zed_camera.launch.xml">
+      <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
         <arg name="camera_name" value="zed_rear"/>
         <arg name="camera_model" value="zed2i"/>
         <arg name="serial_number" value="30627879"/>

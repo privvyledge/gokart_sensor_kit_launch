@@ -1,4 +1,5 @@
 <launch>
+  <arg name="autoware_launch" default="false" description="Whether to launch nodes for use with Autoware or not."/>
   <arg name="launch_driver" default="true"/>
   <arg name="gnss_receiver" default="yahboom" description=""/>
   <arg name="port" default="/dev/ttyUSB0"/>
@@ -53,7 +54,7 @@
     </group>
 
     <!-- NavSatFix to MGRS Pose -->
-    <include file="$(find-pkg-share gnss_poser)/launch/gnss_poser.launch.xml">
+    <include file="$(find-pkg-share gnss_poser)/launch/gnss_poser.launch.xml" if="$(var autoware_launch)" >
       <arg name="input_topic_fix" value="$(var navsatfix_topic_name)"/>
       <arg name="input_topic_orientation" value="$(var orientation_topic_name)"/>
 
