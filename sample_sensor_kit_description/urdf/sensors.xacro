@@ -48,12 +48,12 @@
       parent="base_link"
       child="rear_axle_link"
       name="rear_axle_joint"
-      x="${calibration['base_link']['rear_axle_link']['x']}"
-      y="${calibration['base_link']['rear_axle_link']['y']}"
-      z="${calibration['base_link']['rear_axle_link']['z']}"
-      roll="${calibration['base_link']['rear_axle_link']['roll']}"
-      pitch="${calibration['base_link']['rear_axle_link']['pitch']}"
-      yaw="${calibration['base_link']['rear_axle_link']['yaw']}"
+      x="0.0"
+      y="0.0"
+      z="${vehicle_info['/**']['ros__parameters']['wheel_radius']}"
+      roll="0.0"
+      pitch="0.0"
+      yaw="0.0"
     />
 
 </robot>

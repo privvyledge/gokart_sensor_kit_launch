@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+See:
+    * https://github.com/ros-perception/depthimage_to_laserscan/tree/ros2
+    * https://github.com/ros-perception/depthimage_to_laserscan/blob/ros2/launch/depthimage_to_laserscan-launch.py
+    * https://index.ros.org/r/depthimage_to_laserscan/
+    * http://wiki.ros.org/depthimage_to_laserscan
+    * https://github.com/stereolabs/zed-ros-examples/blob/master/examples/zed_nodelet_example/launch/zed_laserscan_nodelet.launch
+
+Todo:
+    * Setup composable node
+-->
+
+<!--Usage:-->
+<!--    ros2 run depthimage_to_laserscan depthimage_to_laserscan_node &#45;&#45;ros-args &#45;&#45;remap /depth:=/lidar/left/zed_left/zed_node/depth/depth_registered &#45;&#45;remap /depth_camera_info:=/lidar/left/zed_left/zed_node/depth/camera_info &#45;&#45;param output_frame:=zed_left_left_camera_frame-->
+
+<launch>
+
+</launch>

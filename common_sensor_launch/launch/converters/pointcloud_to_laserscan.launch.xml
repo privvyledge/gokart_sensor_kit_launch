@@ -1,0 +1,12 @@
+<!-- Convert PointClouds to laserscan
+ See:
+    * https://github.com/ros-perception/pointcloud_to_laserscan/tree/humble
+    * http://wiki.ros.org/pointcloud_to_laserscan
+    * https://github.com/ros-perception/pointcloud_to_laserscan/blob/humble/launch/sample_pointcloud_to_laserscan_launch.py
+    * https://index.ros.org/p/pointcloud_to_laserscan/
+
+Todo:
+    * setup composable node
+ -->
+<!-- Usage:-->
+<!--    * ros2 run pointcloud_to_laserscan pointcloud_to_laserscan_node &#45;&#45;ros-args &#45;&#45;remap /pointcloud_to_laserscan/input/pointcloud:=/lidar/top/livox/lidar &#45;&#45;param /pointcloud_to_laserscan/scan_time:=0.3-->
