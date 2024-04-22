@@ -35,17 +35,20 @@
   <!-- Params -->
   <arg name="camera_name" default="zed2i"/>
   <arg name="camera_model" default="zed2i"/>
-  <arg name="cam_pose" default="[0.0,0.0,0.0,0.0,0.0,0.0]"/>
-  <arg name="base_frame" default="base_link"/>
-  <arg name="publish_tf" default="false"/>
-  <arg name="publish_map_tf" default="false"/>
+  <arg name="serial_number" default="0"/>
+  <arg name="svo_path" default=""/>
+<!--  <arg name="cam_pose" default="[0.0,0.0,0.0,0.0,0.0,0.0]"/>-->
+<!--  <arg name="base_frame" default="base_link"/>-->
+  <arg name="publish_urdf" default="false"/>
+  <arg name="publish_tf" default="false"/> <!-- publishes odom -> base_link transform -->
+  <arg name="publish_map_tf" default="false"/> <!-- publishes map -> odom transform if publish_tf:=true -->
   <arg name="publish_imu_tf" default="true"/>
   <arg name="imu_fusion" default="true"/>
+  <arg name="pos_tracking_enabled" default="true"/>
   <arg name="gnss_fusion_enabled" default="true"/>
   <arg name="gnss_fix_topic" default="/gnss/yahboom/nav_sat_fix"/>
   <arg name="gnss_frame" default="gnss_link"/>
   <arg name="mapping_enabled" default="false"/>
-  <arg name="publish_urdf" default="false"/>
   <arg name="ros_params_override_path" default="$(find-pkg-share common_sensor_launch)/config/camera_zed2i.yaml" />
   <arg name="launch_driver" default="true"/>
 <!--  <arg name="sensor_frame" default="velodyne"/>-->
@@ -56,17 +59,20 @@
   <include file="$(find-pkg-share common_sensor_launch)/launch/zed2i_node_container.launch.py">
     <arg name="camera_name" value="$(var camera_name)"/>
     <arg name="camera_model" value="$(var camera_model)"/>
-    <arg name="cam_pose" value="$(var cam_pose)"/>
-    <arg name="base_frame" value="$(var base_frame)"/>
+    <arg name="serial_number" value="$(var serial_number)"/>
+    <arg name="svo_path" value="$(var svo_path)"/>
+<!--    <arg name="cam_pose" value="$(var cam_pose)"/>-->
+<!--    <arg name="base_frame" value="$(var base_frame)"/>-->
+    <arg name="publish_urdf" value="$(var publish_urdf)"/>
     <arg name="publish_tf" value="$(var publish_tf)"/>
     <arg name="publish_map_tf" value="$(var publish_map_tf)"/>
     <arg name="publish_imu_tf" value="$(var publish_imu_tf)"/>
     <arg name="imu_fusion" value="$(var imu_fusion)"/>
+    <arg name="pos_tracking_enabled" value="$(var pos_tracking_enabled)"/>
     <arg name="gnss_fusion_enabled" value="$(var gnss_fusion_enabled)"/>
     <arg name="gnss_fix_topic" value="$(var gnss_fix_topic)"/>
     <arg name="gnss_frame" value="$(var gnss_frame)"/>
     <arg name="mapping_enabled" value="$(var mapping_enabled)"/>
-    <arg name="publish_urdf" value="$(var publish_urdf)"/>
     <arg name="ros_params_override_path" value="$(var ros_params_override_path)"/>
     <arg name="launch_driver" value="$(var launch_driver)"/>
 <!--    <arg name="frame_id" value="$(var sensor_frame)"/>-->

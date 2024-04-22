@@ -2,7 +2,7 @@
   <arg name="autoware_launch" default="false" description="Whether to launch nodes for use with Autoware or not."/>
   <arg name="launch_driver" default="true"/>
   <arg name="gnss_receiver" default="yahboom" description=""/>
-  <arg name="port" default="/dev/ttyUSB0"/>
+  <arg name="port" default="/dev/gps_usb"/>
   <arg name="baudrate" default="115200"/>
   <arg name="gnss_frame" default="gnss_link"/>
   <arg name="time_ref_source" default="gps"/>
@@ -49,9 +49,9 @@
     </group>
 
     <!-- Septentrio GNSS Driver -->
-    <group if="$(eval &quot;'$(var launch_driver)' and '$(var gnss_receiver)'=='septentrio'&quot;)">
-      <include file="$(find-pkg-share septentrio_gnss_driver)/launch/mosaic_x5_rover.launch.xml"/>
-    </group>
+<!--    <group if="$(eval &quot;'$(var launch_driver)' and '$(var gnss_receiver)'=='septentrio'&quot;)">-->
+<!--      <include file="$(find-pkg-share septentrio_gnss_driver)/launch/mosaic_x5_rover.launch.xml"/>-->
+<!--    </group>-->
 
     <!-- NavSatFix to MGRS Pose -->
     <include file="$(find-pkg-share gnss_poser)/launch/gnss_poser.launch.xml" if="$(var autoware_launch)" >

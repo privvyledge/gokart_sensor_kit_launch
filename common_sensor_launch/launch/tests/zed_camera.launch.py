@@ -1,17 +1,6 @@
-# Copyright 2022 Stereolabs
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+"""
+Todo: pass remapped topic names as arguments. See Notes.txt for details
+"""
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -62,6 +51,11 @@ def launch_setup(context, *args, **kwargs):
     # Launch configuration variables
     svo_path = LaunchConfiguration('svo_path')
 
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    sim_mode = LaunchConfiguration('sim_mode')
+    sim_address = LaunchConfiguration('sim_address')
+    sim_port = LaunchConfiguration('sim_port')
+
     camera_name = LaunchConfiguration('camera_name')
     camera_model = LaunchConfiguration('camera_model')
 
@@ -69,11 +63,7 @@ def launch_setup(context, *args, **kwargs):
 
     config_common_path = LaunchConfiguration('config_path')
 
-    zed_id = LaunchConfiguration('zed_id')
     serial_number = LaunchConfiguration('serial_number')
-
-    base_frame = LaunchConfiguration('base_frame')
-    cam_pose = LaunchConfiguration('cam_pose')
 
     publish_urdf = LaunchConfiguration('publish_urdf')
     publish_tf = LaunchConfiguration('publish_tf')
@@ -84,6 +74,7 @@ def launch_setup(context, *args, **kwargs):
     ros_params_override_path = LaunchConfiguration('ros_params_override_path')
 
     imu_fusion = LaunchConfiguration('imu_fusion')
+    pos_tracking_enabled = LaunchConfiguration('pos_tracking_enabled')
     gnss_fusion_enabled = LaunchConfiguration('gnss_fusion_enabled')
     gnss_fix_topic = LaunchConfiguration('gnss_fix_topic')
     gnss_frame = LaunchConfiguration('gnss_frame')
@@ -101,9 +92,9 @@ def launch_setup(context, *args, **kwargs):
             camera_model_val + '.yaml'
     )
 
-    # Convert 'cam_pose' parameter
-    cam_pose_str = cam_pose.perform(context)
-    cam_pose_array = parse_array_param(cam_pose_str)
+    # # Convert 'cam_pose' parameter
+    # cam_pose_str = cam_pose.perform(context)
+    # cam_pose_array = parse_array_param(cam_pose_str)
 
     # Robot State Publisher node
     rsp_node = Node(
@@ -120,14 +111,14 @@ def launch_setup(context, *args, **kwargs):
                             'xacro', ' ', xacro_path, ' ',
                             'camera_name:=', camera_name_val, ' ',
                             'camera_model:=', camera_model_val, ' ',
-                            'base_frame:=', base_frame, ' ',
+                            # 'base_frame:=', base_frame, ' ',
                             'gnss_frame:=', gnss_frame, ' ',
-                            'cam_pos_x:=', cam_pose_array[0], ' ',
-                            'cam_pos_y:=', cam_pose_array[1], ' ',
-                            'cam_pos_z:=', cam_pose_array[2], ' ',
-                            'cam_roll:=', cam_pose_array[3], ' ',
-                            'cam_pitch:=', cam_pose_array[4], ' ',
-                            'cam_yaw:=', cam_pose_array[5]
+                            # 'cam_pos_x:=', cam_pose_array[0], ' ',
+                            # 'cam_pos_y:=', cam_pose_array[1], ' ',
+                            # 'cam_pos_z:=', cam_pose_array[2], ' ',
+                            # 'cam_roll:=', cam_pose_array[3], ' ',
+                            # 'cam_pitch:=', cam_pose_array[4], ' ',
+                            # 'cam_yaw:=', cam_pose_array[5]
                         ])
             }]
     )
@@ -139,29 +130,41 @@ def launch_setup(context, *args, **kwargs):
         executable='zed_wrapper',
         name=node_name,
         output='screen',
+        # prefix=['xterm -e valgrind --tools=callgrind'],
+        # prefix=['xterm -e gdb -ex run --args'],
+        #prefix=['gdbserver localhost:3000'],
         parameters=[
             # YAML files
             config_common_path,  # Common parameters
             config_camera_path,  # Camera related parameters
             # Overriding
             {
+                'use_sim_time': use_sim_time,
+                'simulation.sim_enabled': sim_mode,
+                'simulation.sim_address': sim_address,
+                'simulation.sim_port': sim_port,
                 'general.camera_name': camera_name_val,
                 'general.camera_model': camera_model_val,
                 'general.svo_file': svo_path,
-                'pos_tracking.base_frame': base_frame,
-                'general.zed_id': zed_id,
+                # 'pos_tracking.base_frame': base_frame,
+                # 'general.zed_id': zed_id,
                 'general.serial_number': serial_number,
                 'pos_tracking.publish_tf': publish_tf,
                 'pos_tracking.publish_map_tf': publish_map_tf,
                 'sensors.publish_imu_tf': publish_imu_tf,
                 'pos_tracking.imu_fusion': imu_fusion,
+                'pos_tracking.pos_tracking_enabled': pos_tracking_enabled,
                 'gnss_fusion.gnss_fusion_enabled': gnss_fusion_enabled,
                 'gnss_fusion.gnss_fix_topic': gnss_fix_topic,
                 'gnss_fusion.gnss_frame': gnss_frame,
                 'mapping.mapping_enabled': mapping_enabled,
             },
             ros_params_override_path,
-        ]
+        ],
+        # remappings=[
+        #     ('imu/data', f'/imu/{camera_name_val}/data'),
+        #     (f'/{camera_name_val}/{node_name}/imu/data', f'/imu/{camera_name_val}/data')
+        # ]
     )
 
     return [
@@ -180,7 +183,9 @@ def generate_launch_description():
                 description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`. Leave empty to use the camera model as camera name.'),
             DeclareLaunchArgument(
                 'camera_model',
-                description='The model of the camera. Using a wrong camera model can disable camera features. Valid models: `zed`, `zedm`, `zed2`, `zed2i`.'),
+                default_value=TextSubstitution(text="zed2i"),
+                description='[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features.',
+                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm']),
             DeclareLaunchArgument(
                 'node_name',
                 default_value='zed_node',
@@ -189,30 +194,34 @@ def generate_launch_description():
                 'config_path',
                 default_value=TextSubstitution(text=default_config_common),
                 description='Path to the YAML configuration file for the camera.'),
-            DeclareLaunchArgument(
-                'zed_id',
-                default_value='0',
-                description='The index of the camera to be opened. To be used in multi-camera rigs.'),
+            # DeclareLaunchArgument(
+            #     'zed_id',
+            #     default_value='0',
+            #     description='The index of the camera to be opened. To be used in multi-camera rigs.'),
             DeclareLaunchArgument(
                 'serial_number',
                 default_value='0',
-                description='The serial number of the camera to be opened. To be used in multi-camera rigs. Has priority with respect to `zed_id`.'),
+                description='The serial number of the camera to be opened. It is mandatory to use this parameter in multi-camera rigs to distinguish between different cameras.'),
             DeclareLaunchArgument(
                 'publish_urdf',
                 default_value='true',
-                description='Enable URDF processing and starts Robot State Published to propagate static TF.'),
+                description='Enable URDF processing and starts Robot State Published to propagate static TF.',
+                choices=['true', 'false']),
             DeclareLaunchArgument(
                 'publish_tf',
                 default_value='true',
-                description='Enable publication of the `odom -> base_link` TF.'),
+                description='Enable publication of the `odom -> camera_link` TF.',
+                choices=['true', 'false']),
             DeclareLaunchArgument(
                 'publish_map_tf',
                 default_value='true',
-                description='Enable publication of the `map -> odom` TF. Note: Ignored if `publish_tf` is False.'),
+                description='Enable publication of the `map -> odom` TF. Note: Ignored if `publish_tf` is False.',
+                choices=['true', 'false']),
             DeclareLaunchArgument(
                 'publish_imu_tf',
                 default_value='true',
-                description='Enable publication of the IMU TF. Note: Ignored if `publish_tf` is False.'),
+                description='Enable publication of the IMU TF. Note: Ignored if `publish_tf` is False.',
+                choices=['true', 'false']),
             DeclareLaunchArgument(
                 'xacro_path',
                 default_value=TextSubstitution(text=default_xacro_path),
@@ -225,14 +234,18 @@ def generate_launch_description():
                 'svo_path',
                 default_value=TextSubstitution(text="live"),
                 description='Path to an input SVO file. Note: overrides the parameter `general.svo_file` in `common.yaml`.'),
-            DeclareLaunchArgument(
-                'base_frame',
-                default_value='base_link',
-                description='Name of the base link frame.'),
+            # DeclareLaunchArgument(
+            #     'base_frame',
+            #     default_value='base_link',
+            #     description='Name of the base link frame.'),
             DeclareLaunchArgument(
                     'imu_fusion',
                     default_value='true',
                     description='enable/disable IMU fusion. When set to false, only the optical odometry will be used'),
+            DeclareLaunchArgument(
+                    'pos_tracking_enabled',
+                    default_value='true',
+                    description='True to enable positional tracking from start'),
             DeclareLaunchArgument(
                     'gnss_fusion_enabled',
                     default_value='false',
@@ -244,16 +257,33 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'gnss_frame',
                 default_value='',
-                description='Name of the GNSS link frame. Leave empty if not used. Remember to set the transform `base_link` -> `gnss_frame` in the URDF file.'),
+                description='Name of the GNSS link frame. Leave empty if not used. Remember to set the transform `camera_link` -> `gnss_frame` in the URDF file.'),
             DeclareLaunchArgument(
                     'mapping_enabled',
                     default_value='false',
-                    description='True to enable mapping and fused point cloud pubblication'),
-
+                    description='True to enable mapping and fused point cloud publication'),
             DeclareLaunchArgument(
-                'cam_pose',
-                default_value='[0.0,0.0,0.0,0.0,0.0,0.0]',
-                description='Pose of the camera with respect to the base frame (i.e. `base_link`): [x,y,z,r,p,y]. Note: Orientation in rad.)'),
+                    'use_sim_time',
+                    default_value='false',
+                    description='Enable simulation time mode.',
+                    choices=['true', 'false']),
+            DeclareLaunchArgument(
+                    'sim_mode',
+                    default_value='false',
+                    description='Enable simulation mode. Set `sim_address` and `sim_port` to configure the simulator input.',
+                    choices=['true', 'false']),
+            DeclareLaunchArgument(
+                    'sim_address',
+                    default_value='127.0.0.1',
+                    description='The connection address of the simulation server. See the documentation of the supported simulation plugins for more information.'),
+            DeclareLaunchArgument(
+                    'sim_port',
+                    default_value='30000',
+                    description='The connection port of the simulation server. See the documentation of the supported simulation plugins for more information.'),
+            # DeclareLaunchArgument(
+            #     'cam_pose',
+            #     default_value='[0.0,0.0,0.0,0.0,0.0,0.0]',
+            #     description='Pose of the camera with respect to the base frame (i.e. `base_link`): [x,y,z,r,p,y]. Note: Orientation in rad.)'),
             OpaqueFunction(function=launch_setup)
         ]
     )

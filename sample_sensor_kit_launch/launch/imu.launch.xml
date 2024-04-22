@@ -1,10 +1,3 @@
-<!--
-Todo:
-  * move to "common_sensor_launch" and name it imu_corrector.launch.xml, then refactor and make this launch file spawn for multiple IMUs, i.e
-  LIVOX LIDAR IMU, 4x ZED 2i IMUs, and Yahboom IMU.
-  * Also could add IMU filter before to get orientation data from IMU
-  * Launch imu_tools as a component (imu_filter_madgwick only)
-  -->
 <launch>
   <arg name="autoware_launch" default="false" description="Whether to launch nodes for use with Autoware or not."/>
   <arg name="launch_driver" default="true"/>
@@ -15,11 +8,6 @@ Todo:
 
   <group>
     <push-ros-namespace namespace="imu"/>
-
-    <!-- Switch topic name -->
-<!--    <let name="imu_topic_name" value="data" if="$(var filter_imu)"/>-->
-<!--    <let name="imu_topic_name" value="data_raw" unless="$(var filter_imu)"/>-->
-
     <!-- Yahboom IMU launch -->
     <group>
       <push-ros-namespace namespace="$(var imu_driver)"/>
@@ -58,29 +46,55 @@ Todo:
 
       <include file="$(find-pkg-share common_sensor_launch)/launch/imu_corrector.launch.xml">
         <arg name="autoware_launch" value="$(var autoware_launch)"/>
+        <arg name="filter_imu" value="false"/>
+        <arg name="use_mag" value="true"/>
         <arg name="imu_driver" value="zed"/>
         <arg name="imu_topic" value="/lidar/front/zed_front/zed_node/imu/data"/>
-        <arg name="filter_imu" value="true"/>
-        <arg name="use_mag" value="false"/>
+        <arg name="mag_topic" value="/lidar/front/zed_front/zed_node/imu/mag"/>
       </include>
     </group>
 
-<!--    <group  if="$(var autoware_launch)" >-->
-<!--      <arg name="vehicle_id" default="default"/>-->
-<!--      <arg name="imu_raw_name" default="$(var imu_driver)/imu_raw"/>-->
-<!--      <arg name="imu_corrector_param_file" default="$(find-pkg-share individual_params)/config/$(var vehicle_id)/sample_sensor_kit/imu_corrector.param.yaml"/>-->
+    <!-- ZED rear IMU launch -->
+    <group>
+      <push-ros-namespace namespace="zed_rear"/>
 
-<!--      <include file="$(find-pkg-share imu_corrector)/launch/imu_corrector.launch.xml">-->
-<!--        <arg name="input_topic" value="$(var imu_raw_name)"/>-->
-<!--        <arg name="output_topic" value="imu_data"/>-->
-<!--        <arg name="param_file" value="$(var imu_corrector_param_file)"/>-->
-<!--      </include>-->
+      <include file="$(find-pkg-share common_sensor_launch)/launch/imu_corrector.launch.xml">
+        <arg name="autoware_launch" value="$(var autoware_launch)"/>
+        <arg name="filter_imu" value="false"/>
+        <arg name="use_mag" value="true"/>
+        <arg name="imu_driver" value="zed"/>
+        <arg name="imu_topic" value="/lidar/rear/zed_rear/zed_node/imu/data"/>
+        <arg name="mag_topic" value="/lidar/rear/zed_rear/zed_node/imu/mag"/>
+      </include>
+    </group>
 
-<!--      <include file="$(find-pkg-share imu_corrector)/launch/gyro_bias_estimator.launch.xml">-->
-<!--        <arg name="input_imu_raw" value="$(var imu_raw_name)"/>-->
-<!--        <arg name="input_odom" value="/localization/kinematic_state"/>-->
-<!--        <arg name="imu_corrector_param_file" value="$(var imu_corrector_param_file)"/>-->
-<!--      </include>-->
-<!--    </group>-->
+    <!-- ZED left IMU launch -->
+    <group>
+      <push-ros-namespace namespace="zed_left"/>
+
+      <include file="$(find-pkg-share common_sensor_launch)/launch/imu_corrector.launch.xml">
+        <arg name="autoware_launch" value="$(var autoware_launch)"/>
+        <arg name="filter_imu" value="false"/>
+        <arg name="use_mag" value="true"/>
+        <arg name="imu_driver" value="zed"/>
+        <arg name="imu_topic" value="/lidar/left/zed_left/zed_node/imu/data"/>
+        <arg name="mag_topic" value="/lidar/left/zed_left/zed_node/imu/mag"/>
+      </include>
+    </group>
+
+    <!-- ZED right IMU launch -->
+    <group>
+      <push-ros-namespace namespace="zed_right"/>
+
+      <include file="$(find-pkg-share common_sensor_launch)/launch/imu_corrector.launch.xml">
+        <arg name="autoware_launch" value="$(var autoware_launch)"/>
+        <arg name="filter_imu" value="false"/>
+        <arg name="use_mag" value="true"/>
+        <arg name="imu_driver" value="zed"/>
+        <arg name="imu_topic" value="/lidar/right/zed_right/zed_node/imu/data"/>
+        <arg name="mag_topic" value="/lidar/right/zed_right/zed_node/imu/mag"/>
+      </include>
+    </group>
+
   </group>
 </launch>

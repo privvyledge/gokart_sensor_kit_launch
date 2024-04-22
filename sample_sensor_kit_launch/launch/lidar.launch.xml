@@ -1,3 +1,10 @@
+<!--
+Todo:
+    * remove namespace pushing
+    * remap zed pointclouds to /lidar/zed_front/points, etc.
+    * remap zed imu and mag to /imu/zed_front/imu, etc.
+-->
+
 <launch>
   <arg name="use_intra_process" default="true"/>
   <arg name="use_multithread" default="true"/>
@@ -31,13 +38,15 @@
       </include>
     </group>
 
+<!--     Run /usr/local/zed/tools/ZED_Explorer &#45;&#45;all to list the serial numbers of connected cameras.-->
     <group>
       <push-ros-namespace namespace="front"/>
       <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
         <arg name="camera_name" value="zed_front"/>
         <arg name="camera_model" value="zed2i"/>
-        <arg name="serial_number" value="31955492"/>
-        <arg name="cam_pose" value="[0.0,0.0,0.0,0.0,0.0,0.0]"/>
+        <arg name="serial_number" value="30627879"/>
+        <arg name="svo_path" value=""/>
+<!--        <arg name="cam_pose" value="[0.0,0.0,0.0,0.0,0.0,0.0]"/>-->
       </include>
     </group>
 
@@ -46,8 +55,9 @@
       <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
         <arg name="camera_name" value="zed_left"/>
         <arg name="camera_model" value="zed2i"/>
-        <arg name="serial_number" value="32890871"/>
-        <arg name="cam_pose" value="[0.0,0.0,0.0,0.0,0.0,0.0]"/>
+        <arg name="serial_number" value="34748473"/>
+        <arg name="svo_path" value=""/>
+<!--        <arg name="cam_pose" value="[0.0,0.0,0.0,0.0,0.0,0.0]"/>-->
       </include>
     </group>
 
@@ -56,8 +66,9 @@
       <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
         <arg name="camera_name" value="zed_right"/>
         <arg name="camera_model" value="zed2i"/>
-        <arg name="serial_number" value="34748473"/>
-        <arg name="cam_pose" value="[0.0,0.0,0.0,0.0,0.0,0.0]"/>
+        <arg name="serial_number" value="31955492"/>
+        <arg name="svo_path" value=""/>
+<!--        <arg name="cam_pose" value="[0.0,0.0,0.0,0.0,0.0,0.0]"/>-->
       </include>
     </group>
 
@@ -66,8 +77,9 @@
       <include file="$(find-pkg-share common_sensor_launch)/launch/tests/zed_camera.launch.xml">
         <arg name="camera_name" value="zed_rear"/>
         <arg name="camera_model" value="zed2i"/>
-        <arg name="serial_number" value="30627879"/>
-        <arg name="cam_pose" value="[0.0,0.0,0.0,0.0,0.0,0.0]"/>
+        <arg name="serial_number" value="32890871"/>
+        <arg name="svo_path" value=""/>
+<!--        <arg name="cam_pose" value="[0.0,0.0,0.0,0.0,0.0,0.0]"/>-->
       </include>
     </group>
 

@@ -15,11 +15,14 @@ import os
 from ament_index_python.packages import get_package_share_directory
 import launch
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.actions import OpaqueFunction
-from launch.actions import SetLaunchConfiguration, SetEnvironmentVariable
-from launch.conditions import IfCondition
-from launch.conditions import UnlessCondition
+from launch.actions import (
+    DeclareLaunchArgument,
+    OpaqueFunction,
+    SetLaunchConfiguration,
+    SetEnvironmentVariable
+)
+
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, Command, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.actions import ComposableNodeContainer
@@ -91,6 +94,11 @@ def launch_setup(context, *args, **kwargs):
     # Launch configuration variables
     svo_path = LaunchConfiguration('svo_path')
 
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    sim_mode = LaunchConfiguration('sim_mode')
+    sim_address = LaunchConfiguration('sim_address')
+    sim_port = LaunchConfiguration('sim_port')
+
     camera_name = LaunchConfiguration('camera_name')
     camera_model = LaunchConfiguration('camera_model')
 
@@ -98,11 +106,10 @@ def launch_setup(context, *args, **kwargs):
 
     config_common_path = LaunchConfiguration('config_path')
 
-    zed_id = LaunchConfiguration('zed_id')
     serial_number = LaunchConfiguration('serial_number')
 
-    base_frame = LaunchConfiguration('base_frame')
-    cam_pose = LaunchConfiguration('cam_pose')
+    # base_frame = LaunchConfiguration('base_frame')
+    # cam_pose = LaunchConfiguration('cam_pose')
 
     publish_urdf = LaunchConfiguration('publish_urdf')
     publish_tf = LaunchConfiguration('publish_tf')
@@ -113,6 +120,7 @@ def launch_setup(context, *args, **kwargs):
     ros_params_override_path = LaunchConfiguration('ros_params_override_path')
 
     imu_fusion = LaunchConfiguration('imu_fusion')
+    pos_tracking_enabled = LaunchConfiguration('pos_tracking_enabled')
     gnss_fusion_enabled = LaunchConfiguration('gnss_fusion_enabled')
     gnss_fix_topic = LaunchConfiguration('gnss_fix_topic')
     gnss_frame = LaunchConfiguration('gnss_frame')
@@ -130,9 +138,9 @@ def launch_setup(context, *args, **kwargs):
             camera_model_val + '.yaml'
     )
 
-    # Convert 'cam_pose' parameter
-    cam_pose_str = cam_pose.perform(context)
-    cam_pose_array = parse_array_param(cam_pose_str)
+    # # Convert 'cam_pose' parameter
+    # cam_pose_str = cam_pose.perform(context)
+    # cam_pose_array = parse_array_param(cam_pose_str)
 
     nodes = []
 
@@ -242,14 +250,14 @@ def launch_setup(context, *args, **kwargs):
                             'xacro', ' ', xacro_path, ' ',
                             'camera_name:=', camera_name_val, ' ',
                             'camera_model:=', camera_model_val, ' ',
-                            'base_frame:=', base_frame, ' ',
+                            # 'base_frame:=', base_frame, ' ',
                             'gnss_frame:=', gnss_frame, ' ',
-                            'cam_pos_x:=', cam_pose_array[0], ' ',
-                            'cam_pos_y:=', cam_pose_array[1], ' ',
-                            'cam_pos_z:=', cam_pose_array[2], ' ',
-                            'cam_roll:=', cam_pose_array[3], ' ',
-                            'cam_pitch:=', cam_pose_array[4], ' ',
-                            'cam_yaw:=', cam_pose_array[5]
+                            # 'cam_pos_x:=', cam_pose_array[0], ' ',
+                            # 'cam_pos_y:=', cam_pose_array[1], ' ',
+                            # 'cam_pos_z:=', cam_pose_array[2], ' ',
+                            # 'cam_roll:=', cam_pose_array[3], ' ',
+                            # 'cam_pitch:=', cam_pose_array[4], ' ',
+                            # 'cam_yaw:=', cam_pose_array[5]
                         ])
             }]
     )
@@ -265,17 +273,22 @@ def launch_setup(context, *args, **kwargs):
                 config_camera_path,  # Camera related parameters
                 # Overriding
                 {
+                    'use_sim_time': use_sim_time,
+                    'simulation.sim_enabled': sim_mode,
+                    'simulation.sim_address': sim_address,
+                    'simulation.sim_port': sim_port,
                     'general.camera_name': camera_name_val,
                     'general.camera_model': camera_model_val,
                     'general.svo_file': svo_path,
                     # 'depth.quality': 0,
-                    'pos_tracking.base_frame': base_frame,
-                    'general.zed_id': zed_id,
+                    # 'pos_tracking.base_frame': base_frame,
+                    # 'general.zed_id': zed_id,
                     'general.serial_number': serial_number,
                     'pos_tracking.publish_tf': publish_tf,
                     'pos_tracking.publish_map_tf': publish_map_tf,
                     'sensors.publish_imu_tf': publish_imu_tf,
                     'pos_tracking.imu_fusion': imu_fusion,
+                    'pos_tracking.pos_tracking_enabled': pos_tracking_enabled,
                     'gnss_fusion.gnss_fusion_enabled': gnss_fusion_enabled,
                     'gnss_fusion.gnss_fix_topic': gnss_fix_topic,
                     'gnss_fusion.gnss_frame': gnss_frame,
@@ -302,7 +315,12 @@ def launch_setup(context, *args, **kwargs):
         condition=IfCondition(LaunchConfiguration("launch_driver")),
     )
 
-    return [container, component_loader, driver_component_loader, rsp_node]
+    return [
+        container,
+        component_loader,
+        driver_component_loader,
+        rsp_node
+    ]
 
 
 def generate_launch_description():
@@ -326,13 +344,13 @@ def generate_launch_description():
                 description='The name of the zed_wrapper node. All the topic will have the same prefix: `/<camera_name>/<node_name>/`')
     add_launch_arg("config_path", default_value=TextSubstitution(text=default_config_common), description="Path to the YAML configuration file for the camera.")
 
-    add_launch_arg("base_frame", "base_link", "Name of the base link frame.")
+    # add_launch_arg("base_frame", "base_link", "Name of the base link frame.")
     # add_launch_arg("frame_id", "zed_link", "frame id")  # change in config file
 
-    add_launch_arg(
-            'zed_id',
-            default_value='0',
-            description='The index of the camera to be opened. To be used in multi-camera rigs.')
+    # add_launch_arg(
+    #         'zed_id',
+    #         default_value='0',
+    #         description='The index of the camera to be opened. To be used in multi-camera rigs.')
     add_launch_arg(
             'serial_number',
             default_value='0',
@@ -365,10 +383,18 @@ def generate_launch_description():
             'svo_path',
             default_value=TextSubstitution(text="live"),
             description='Path to an input SVO file. Note: overrides the parameter `general.svo_file` in `common.yaml`.')
+    # add_launch_arg(
+    #         'base_frame',
+    #         default_value='base_link',
+    #         description='Name of the base link frame.')
     add_launch_arg(
-            'base_frame',
-            default_value='base_link',
-            description='Name of the base link frame.')
+            'imu_fusion',
+            default_value='true',
+            description='enable/disable IMU fusion. When set to false, only the optical odometry will be used'),
+    add_launch_arg(
+            'pos_tracking_enabled',
+            default_value='true',
+            description='True to enable positional tracking from start')
     add_launch_arg(
             'gnss_fusion_enabled',
             default_value='false',
@@ -386,12 +412,29 @@ def generate_launch_description():
     add_launch_arg(
             'mapping_enabled',
             default_value='false',
-            description='True to enable mapping and fused point cloud pubblication')
-
+            description='True to enable mapping and fused point cloud publication')
     add_launch_arg(
-            'cam_pose',
-            default_value='[0.0,0.0,0.0,0.0,0.0,0.0]',  # [X, Y, Z, R, P, Y]
-            description='Pose of the camera with respect to the base frame (i.e. `base_link`): [x,y,z,r,p,y]. Note: Orientation in rad.)')
+            'use_sim_time',
+            default_value='false',
+            description='Enable simulation time mode.',
+            choices=['true', 'false']),
+    add_launch_arg(
+            'sim_mode',
+            default_value='false',
+            description='Enable simulation mode. Set `sim_address` and `sim_port` to configure the simulator input.',
+            choices=['true', 'false']),
+    add_launch_arg(
+            'sim_address',
+            default_value='127.0.0.1',
+            description='The connection address of the simulation server. See the documentation of the supported simulation plugins for more information.'),
+    add_launch_arg(
+            'sim_port',
+            default_value='30000',
+            description='The connection port of the simulation server. See the documentation of the supported simulation plugins for more information.')
+    # add_launch_arg(
+    #         'cam_pose',
+    #         default_value='[0.0,0.0,0.0,0.0,0.0,0.0]',  # [X, Y, Z, R, P, Y]
+    #         description='Pose of the camera with respect to the base frame (i.e. `base_link`): [x,y,z,r,p,y]. Note: Orientation in rad.)')
 
     # Autoware launch arguments
     add_launch_arg("launch_driver", "True", "do launch driver")

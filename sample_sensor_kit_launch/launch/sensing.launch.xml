@@ -1,4 +1,8 @@
-<!-- Todo: setup IMU for cameras/lidar with launch_driver:=false -->
+<!--
+Todo:
+  * remap camera and lidar data
+-->
+
 <launch>
   <arg name="autoware_launch" default="false" description="Whether to launch nodes for use with Autoware or not."/>
   <arg name="launch_driver" default="true" description="do launch driver"/>
@@ -8,7 +12,7 @@
   <arg name="vehicle_id" default="$(env VEHICLE_ID default)"/>
 
   <group>
-    <!-- LiDAR Driver -->
+    <!-- LiDAR Driver using Autoware -->
     <include file="$(find-pkg-share sample_sensor_kit_launch)/launch/autoware_lidar.launch.xml" if="$(var autoware_launch)" >
       <arg name="launch_driver" value="$(var launch_driver)"/>
       <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
@@ -16,7 +20,7 @@
       <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>
     </include>
 
-    <!-- LiDAR Driver -->
+    <!-- LiDAR Driver without Autoware -->
     <include file="$(find-pkg-share sample_sensor_kit_launch)/launch/lidar.launch.xml" unless="$(var autoware_launch)" >
       <arg name="launch_driver" value="$(var launch_driver)"/>
       <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
@@ -29,14 +33,15 @@
       <arg name="launch_driver" value="$(var launch_driver)" />
     </include> -->
 
-    <!-- IMU Driver -->
-    <include file="$(find-pkg-share sample_sensor_kit_launch)/launch/imu.launch.xml">
+    <!-- GNSS Driver.
+    Note: for some reason, the GNSS node has to be launched first in this file otherwise it tries to use the IMU port and settings. -->
+    <include file="$(find-pkg-share sample_sensor_kit_launch)/launch/gnss.launch.xml">
       <arg name="autoware_launch" value="$(var autoware_launch)"/>
       <arg name="launch_driver" value="$(var launch_driver)"/>
     </include>
 
-    <!-- GNSS Driver -->
-    <include file="$(find-pkg-share sample_sensor_kit_launch)/launch/gnss.launch.xml">
+    <!-- IMU Driver -->
+    <include file="$(find-pkg-share sample_sensor_kit_launch)/launch/imu.launch.xml">
       <arg name="autoware_launch" value="$(var autoware_launch)"/>
       <arg name="launch_driver" value="$(var launch_driver)"/>
     </include>
@@ -46,5 +51,6 @@
       <arg name="input_vehicle_velocity_topic" value="/vehicle/status/velocity_status"/>
       <arg name="output_twist_with_covariance" value="/sensing/vehicle_velocity_converter/twist_with_covariance"/>
     </include>
+
   </group>
 </launch>
